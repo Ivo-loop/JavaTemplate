@@ -1,0 +1,352 @@
+{
+  "info": {
+    "name": "Banking API - suíte de integração",
+    "description": "Execute as requisições na ordem apresentada. A primeira apaga todas as contas; as demais dependem do estado criado pelos passos anteriores.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Resetar estado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"message\":\"OK\"});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/reset"
+      },
+      "response": []
+    },
+    {
+      "name": "Consultar saldo de conta inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"details\":\"Account not found\"});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/balance?account_id=1234"
+      },
+      "response": []
+    },
+    {
+      "name": "Criar conta com depósito",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"destination\":{\"id\":\"100\",\"balance\":10}});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/event",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"deposit\",\n  \"destination\": \"100\",\n  \"amount\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Depositar em conta existente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"destination\":{\"id\":\"100\",\"balance\":20}});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/event",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"deposit\",\n  \"destination\": \"100\",\n  \"amount\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Consultar saldo de conta existente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql(20);",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/balance?account_id=100"
+      },
+      "response": []
+    },
+    {
+      "name": "Sacar de conta inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"details\":\"Account not found\"});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/event",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"withdraw\",\n  \"origin\": \"200\",\n  \"amount\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Sacar de conta existente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"origin\":{\"id\":\"100\",\"balance\":15}});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/event",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"withdraw\",\n  \"origin\": \"100\",\n  \"amount\": 5\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Transferir de conta existente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"origin\":{\"id\":\"100\",\"balance\":0},\"destination\":{\"id\":\"300\",\"balance\":15}});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/event",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"transfer\",\n  \"origin\": \"100\",\n  \"amount\": 15,\n  \"destination\": \"300\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Transferir de conta inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "pm.test(\"Corpo da resposta\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({\"details\":\"Account not found\"});",
+              "});",
+              "pm.test(\"Content-Type JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/event",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"transfer\",\n  \"origin\": \"200\",\n  \"amount\": 15,\n  \"destination\": \"300\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    }
+  ]
+}
